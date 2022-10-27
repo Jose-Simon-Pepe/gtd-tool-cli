@@ -2,8 +2,9 @@
 
 path=~/gtd/tasks/
 todo=$1
-taskPath=$path$name".task"
-id=0
+id=`./utils/id_generator.sh $path`
+echo "el id de la tarea es: "$id
+taskPath=$path$name$id".task"
 priority=$2
 proyect=$3
 deadline=$4
