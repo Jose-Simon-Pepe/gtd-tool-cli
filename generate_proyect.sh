@@ -17,5 +17,4 @@ echo "priority= "$priority >> $proPath
 echo "area= "$area >> $proPath
 echo "deadline= "$deadline >> $proPath
 echo "thisWeek= "$thisWeek >> $proPath
-#usetting 
-unset 
+#usetting  
