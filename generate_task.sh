@@ -1,19 +1,94 @@
 #!/bin/bash
 
-path=~/gtd/tasks/
-todo=$1
-id=`./utils/id_generator.sh $path`
-echo "el id de la tarea es: "$id
-taskPath=$path$name$id".task"
-priority=$2
-proyect=$3
-deadline=$4
-today=$5
+source utils/format.sh
 
-touch $taskPath
-echo "id= "$id >> $taskPath
-echo "todo= "$todo >> $taskPath
-echo "priority= "$priority >> $taskPath
-echo "proyect= "$proyect >> $taskPath
-echo "deadline= "$deadline >> $taskPath
-echo "today= "$today >> $taskPath
+generateTask() {
+  clear
+  sectionHeader
+  talk "insert the task todo"
+  IFS='\n' read todo
+  talk "insert the task priority"
+  echo "1 for high, 2 for medium, 3 for low"
+  read -n 1 -s priority
+  validProyect=0
+  listAllProyects
+    while [ "$validProyect" = 0 ]; do
+          talk "insert the proyect related (for create one just tipe and enter) "
+    IFS='\n' read proyect 
+    insertProyect $proyect
+    validProyect=$?
+  done
+  if [[ "$validProyect" = 2 ]]; then
+    sectionHeader
+  fi
+  echo "insert the task deadline (if has not just pass this)"
+  read deadline 
+  if [[ -z "$deadline" ]]; then
+    deadline="none"
+  fi
+  validThisDay=0
+  while [ "$validThisDay" = 0 ]; do 
+  echo "insert if the task is a current day goal (y/n)"
+    read -n 1 -s today
+    if [ "$today" != 'y' ] && [ "$today" != 'n' ] ; then
+      talk "invalid selection"
+      validThisDay=0
+    else
+      validThisDay=1
+  fi;
+  done;
+  insertData "$todo" "$priority" "$proyect" "$deadline" "$today"
+  read sgs
+  clear
+}
+
+listAllProyects (){
+
+    for FILE in proyects/*; do
+      id=$(grep -r 'id=' "$FILE")
+      name=$(grep -r 'name=' "$FILE") 
+      echo $id " " $name
+    done
+
+}
+
+insertProyect (){
+  relatedProyect=$(grep -l $1 proyects/*)
+  if [[ -z "$relatedProyect" ]]; then
+    talk "do you wanna create a new proyect called "$1" ? (y/n)" 
+     read -n 1 -s wants 
+    if [[ "$wants" == "y" ]]; then
+      ./generate_proyect.sh $1
+      return 2
+    else
+      talk "proyect wasn't created"
+    fi
+ else 
+   return 1
+  fi
+}
+
+
+insertData(){
+  id=0
+  path=~/gtd/tasks/
+  todo="$1"
+  id=`./utils/id_generator.sh $path`
+  echo "el id de la tarea es: "$id
+  taskPath=$path$id".task"
+  priority="$2"
+  proyect="$3"
+  deadline="$4"
+  today="$5"
+  echo el path es "$taskPath"
+
+  touch $taskPath
+  echo "id= ""$id" >> "$taskPath"
+  echo "todo= ""$todo" >> "$taskPath"
+  echo "priority= ""$priority" >> "$taskPath"
+  echo "proyect= ""$proyect" >> "$taskPath"
+  echo "deadline= ""$deadline" >> "$taskPath"
+  echo "today= "$today >> "$taskPath"
+}
+
+generateTask

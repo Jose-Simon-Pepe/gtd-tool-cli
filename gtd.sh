@@ -1,30 +1,33 @@
 #!/bin/bash
 
+source utils/format.sh
 
 index(){
   talk "looking for updates"
-  git pull origin main
-  clear
-  separator
-  cat utils/logo.txt
-  echo ""
-  talk "welcome "$USER" to gtd cli tool"
+  #git pull origin main
   menu
 }
 
 menu (){
   todo=0
-  while [[ $todo -ne 3 ]]; do
+  while [[ $todo -ne 5 ]]; do
+    clear
+    sectionHeader
+    talk "welcome "$USER" to gtd cli tool :)"
     talk "what would you like to do?"
     space
-    echo "1) add a proyect"
-    echo "2) add a task"
-    echo "3) exit"
+    echo "·-~=o(|1|) add a proyect"
+    echo "·-~=o(|2|) add a task"
+    echo "·-~=o(|3|) clean datastores"
+    echo "·-~=o(|4|) list your data"
+    echo "·-~=o(|5|) exit"
     space
-    read todo
-    if [ "$todo" == "1" ]; then generateProyect;
-    elif [ "$todo" == "2" ]; then echo "dos";
-    elif [ "$todo" == "3" ]; then 
+    read -n 1 -s todo
+    if [ "$todo" == "1" ]; then ./generate_proyect.sh;
+    elif [ "$todo" == "2" ]; then ./generate_task.sh;
+    elif [ "$todo" == "3" ]; then cleanData;
+    elif [[ "$todo" == "4" ]]; then listData;
+    elif [ "$todo" == "5" ]; then 
 	    echo "getting closed. goodbye!";
 	    read none
 	    clear
@@ -32,69 +35,120 @@ menu (){
   done
   }
 
-generateProyect() {
-  clear 
-  space
-  separator
-  talk "insert the proyect name"
-  read name
-  talk "insert the proyect priority"
-  echo "1 for high, 2 for medium, 3 for low"
-  read priority
-  validArea=0
-  while [ "$validArea" = 0 ]; do
-        talk "insert the proyect responsability area (for create one just tipe and enter) "
-        read area
-	insertRespo $area
-  validArea=$?
+
+
+
+listData(){
+  clear
+  sectionHeader
+  talk "what kind of data do you wanna list?"
+  space 
+  echo "a) your tasks"
+  echo "b) your proyects"
+  echo "c) your inputs"
+  read -n 1 -s toList
+  if [ "$toList" == "a" ]; then listTasks;
+  elif [ "$toList" == "b" ]; then listAllProyects;
+  elif [ "$toList" == "c" ]; then listInputs;
+  else echo "wrong input. Try again"; fi;
+}
+
+listTasks(){
+ space
+ talk "and do you wanna list all your tasks, or only which are related to a particular proyect?"
+ space
+ echo "a) all"
+ echo "b) all related to"
+ space
+ read -n 1 -s wanna
+  if [ "$wanna" == "a" ]; then listAllTasks;
+  elif [ "$wanna" == "b" ]; then listTasksRelatedProyect;
+  else echo "wrong input. Try again"; fi;
+  read a
+}
+
+listAllTasks(){
+      for FILE in tasks/*; do
+      id=$(grep -r 'id=' "$FILE")
+      todo=$(grep -r 'todo=' "$FILE") 
+      echo $id " " $todo
+    done
+}
+
+listTasksRelatedProyect(){ 
+ talk "enter proyect id to see all task related to and press enter"
+ space
+ listAllProyects
+ space
+ read -s proyToSearch
+ listAllTaskRelatedTo "$proyToSearch"
+}
+
+#listInputs(){}
+
+listAllProyects(){
+  if [[ -z "$1" ]]; then
+    for FILE in proyects/*; do
+      id=$(grep -r 'id=' "$FILE")
+      name=$(grep -r 'name=' "$FILE") 
+      echo $id " " $name
+    done
+  else
+      grep -r "id= $1" proyects/ 
+  fi
+}
+
+listAllTaskRelatedTo(){
+    proj="$(grep -l "id= $1" proyects/*)"
+    projName=$(grep -i 'name= ' $proj | sed 's/name= //g')
+    tasks="$(grep -l "proyect= $projName" tasks/*)"
+    for FILE in tasks/*; do
+      found="$(grep -l "proyect= $projName" "$FILE")"
+     if [[ ! -z "$found" ]]; then
+        idFound="$(grep -r "id=" "$found")"
+        todoFound="$(grep -r "todo=" "$found")"
+        echo "$todoFound" "$idFound"
+    fi
+    done
+}
+
+cleanData (){
+  into=1
+  while [[ $into = 1 ]]; do
+    clear
+    sectionHeader
+    Red=$'\e[0;31m'
+    Green=$'\e[0;32m'
+    Blue=$'\e[0;34m'
+    White=$'\e[0;97m'
+    echo "$Red "
+    talk "attention! data removing is not undoable"
+    talk "pay carefully attention to what you will do"
+    space
+    talk "what do you want to remove?"
+    echo "a) all your personal data"
+    echo "b) all your proyects"
+    echo "c) all your responsabilities"
+    echo "d) all your tasks"
+    echo "e) go back"
+    space
+    read -n 1 -s toRemove
+    if [[ "$toRemove" == "a" ]]; then
+      rm -i proyects/*
+      rm -i inputs/*
+      rm -i responsabilities/*
+      rm -i tasks/*
+    elif [[ "$toRemove" == "b" ]]; then
+      rm -i proyects/*
+    elif [[ "$toRemove" == "c" ]]; then
+      rm -i responsabilities/*
+    elif [[ "$toRemove" == "d" ]]; then
+      rm -i tasks/*
+    elif [[ "$toRemove" == "e" ]]; then
+      into=0
+    fi
+    echo "$White"
   done
-  echo "insert the proyect deadline (if has not just pass this)"
-  read deadline 
-  if [[ -z "$deadline" ]]; then
-    deadline="none"
-  fi
-  validThisWeek=0
-  while [ "$validThisWeek" = 0 ]; do 
-  echo "insert if the proyect is a current week goal (y/n)"
-  read thisWeek
-    if [ "$thisWeek" != 'y' ] && [ "$thisWeek" != 'n' ] ; then
-      talk "invalid selection"
-      validThisWeek=0
-    else
-      validThisWeek=1
-  fi;
-  done;
 }
-
-
- insertRespo (){
-  if [[ -f "responsabilities/""$1"".resp" ]];
-  then 
-   return 1
-  else 
-    talk "do you wanna create a new resp called "$1" ? (y/n)" ;
-   read wants 
-   if [[ "$wants" == "y" ]]; then
-     touch "responsabilities/"$1".resp"
-     talk "yay you've got a new resp area"
-     return 1
-   else
-     talk "responsability wasn't created"
-   fi
-  fi
-}
-
-function separator {
-  echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-="
-}
-
-function space {
-  echo ""
-}
-
-function talk (){ 
-  echo "> "$@
-}
-
 
 index 
