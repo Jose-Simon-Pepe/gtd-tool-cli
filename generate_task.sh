@@ -15,8 +15,15 @@ generateTask() {
     while [ "$validProyect" = 0 ]; do
           talk "insert the proyect related (for create one just tipe and enter) "
     IFS='\n' read proyect 
-    insertProyect $proyect
-    validProyect=$?
+    relatedProyect=$(grep -l "$proyect" proyects/*)
+    proyectName="$(grep  -i "name= " "$relatedProyect" | sed 's/name= //g' )"
+    if [[ ! -z "$proyectName" ]]; then
+        proyect="$proyectName"
+        validProyect=1
+    else
+        insertProyect $proyect
+        validProyect=$?
+    fi
   done
   if [[ "$validProyect" = 2 ]]; then
     sectionHeader
@@ -54,6 +61,9 @@ listAllProyects (){
 
 insertProyect (){
   relatedProyect=$(grep -l $1 proyects/*)
+  proyectName="$(grep  -i "name= " "$relatedProyect" | sed 's/name= //g' )"
+  echo "se relaciona con proy "$proyectName
+
   if [[ -z "$relatedProyect" ]]; then
     talk "do you wanna create a new proyect called "$1" ? (y/n)" 
      read -n 1 -s wants 

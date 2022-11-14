@@ -10,7 +10,7 @@ index(){
 
 menu (){
   todo=0
-  while [[ $todo -ne 5 ]]; do
+  while [[ $todo -ne 6 ]]; do
     clear
     sectionHeader
     talk "welcome "$USER" to gtd cli tool :)"
@@ -20,23 +20,31 @@ menu (){
     echo "·-~=o(|2|) add a task"
     echo "·-~=o(|3|) clean datastores"
     echo "·-~=o(|4|) list your data"
-    echo "·-~=o(|5|) exit"
+    echo "·-~=o(|5|) enter input to inputbox"
+    echo "·-~=o(|6|) exit"
     space
     read -n 1 -s todo
     if [ "$todo" == "1" ]; then ./generate_proyect.sh;
     elif [ "$todo" == "2" ]; then ./generate_task.sh;
     elif [ "$todo" == "3" ]; then cleanData;
     elif [[ "$todo" == "4" ]]; then listData;
-    elif [ "$todo" == "5" ]; then 
+    elif [[ "$todo" == "5" ]]; then enterInput;
+    elif [ "$todo" == "6" ]; then 
 	    echo "getting closed. goodbye!";
 	    read none
+      cd ~
 	    clear
     else echo "wrong input. Try again"; fi;
   done
   }
 
 
-
+enterInput(){
+  clear
+  sectionHeader
+  talk "insert the data"
+  read data && touch inputs/"$data"
+}
 
 listData(){
   clear
@@ -68,11 +76,11 @@ listTasks(){
 }
 
 listAllTasks(){
-      for FILE in tasks/*; do
-      id=$(grep -r 'id=' "$FILE")
-      todo=$(grep -r 'todo=' "$FILE") 
-      echo $id " " $todo
-    done
+   for FILE in tasks/*; do
+    id=$(grep -r 'id=' "$FILE")
+    todo=$(grep -r 'todo=' "$FILE") 
+    echo $id " " $todo
+  done
 }
 
 listTasksRelatedProyect(){ 
@@ -84,7 +92,13 @@ listTasksRelatedProyect(){
  listAllTaskRelatedTo "$proyToSearch"
 }
 
-#listInputs(){}
+listInputs(){
+  space
+  cd inputs/
+  for n in *; do printf '%s\n' "$n"; done
+  cd ..
+  read s 
+}
 
 listAllProyects(){
   if [[ -z "$1" ]]; then
@@ -99,17 +113,19 @@ listAllProyects(){
 }
 
 listAllTaskRelatedTo(){
-    proj="$(grep -l "id= $1" proyects/*)"
-    projName=$(grep -i 'name= ' $proj | sed 's/name= //g')
-    tasks="$(grep -l "proyect= $projName" tasks/*)"
-    for FILE in tasks/*; do
-      found="$(grep -l "proyect= $projName" "$FILE")"
-     if [[ ! -z "$found" ]]; then
-        idFound="$(grep -r "id=" "$found")"
-        todoFound="$(grep -r "todo=" "$found")"
-        echo "$todoFound" "$idFound"
-    fi
+  proj="$(grep -l "id= $1" proyects/*)"
+  projName=$(grep -i 'name= ' $proj | sed 's/name= //g')
+  tasks="$(grep -l "proyect= $projName" tasks/*)"
+  for FILE in tasks/*; do
+    found="$(grep -l "proyect= $projName" "$FILE")"
+    if [[ ! -z "$found" ]]; then
+    for FOUND in "$found"; do 
+    idFound="$(grep -r "id=" "$found")"
+    todoFound="$(grep -r "todo=" "$found" )"
+      echo "$todoFound" "$idFound"
     done
+  fi
+  done
 }
 
 cleanData (){
@@ -134,10 +150,10 @@ cleanData (){
     space
     read -n 1 -s toRemove
     if [[ "$toRemove" == "a" ]]; then
-      rm -i proyects/*
-      rm -i inputs/*
-      rm -i responsabilities/*
-      rm -i tasks/*
+      rm -i  proyects/*
+      rm -i  inputs/*
+      rm -i  responsabilities/*
+      rm -i  tasks/*
     elif [[ "$toRemove" == "b" ]]; then
       rm -i proyects/*
     elif [[ "$toRemove" == "c" ]]; then
