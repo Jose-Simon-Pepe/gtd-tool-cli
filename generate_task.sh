@@ -5,11 +5,14 @@ source utils/format.sh
 generateTask() {
   clear
   sectionHeader
+  # setting todo
   talk "insert the task todo"
   IFS='\n' read todo
+  # setting task priority
   talk "insert the task priority"
   echo "1 for high, 2 for medium, 3 for low"
   read -n 1 -s priority
+  # seeting task project
   validProyect=0
   listAllProyects
     while [ "$validProyect" = 0 ]; do
@@ -28,11 +31,13 @@ generateTask() {
   if [[ "$validProyect" = 2 ]]; then
     sectionHeader
   fi
+  # setting task deadline
   echo "insert the task deadline (if has not just pass this)"
   read deadline 
   if [[ -z "$deadline" ]]; then
     deadline="none"
   fi
+  # setting this day
   validThisDay=0
   while [ "$validThisDay" = 0 ]; do 
   echo "insert if the task is a current day goal (y/n)"
@@ -44,19 +49,17 @@ generateTask() {
       validThisDay=1
   fi;
   done;
-  insertData "$todo" "$priority" "$proyect" "$deadline" "$today"
-  read sgs
+  insertData   
+  read no
   clear
 }
 
 listAllProyects (){
-
     for FILE in proyects/*; do
       id=$(grep -r 'id=' "$FILE")
       name=$(grep -r 'name=' "$FILE") 
       echo $id " " $name
     done
-
 }
 
 insertProyect (){
@@ -82,16 +85,10 @@ insertProyect (){
 insertData(){
   id=0
   path=~/gtd/tasks/
-  todo="$1"
   id=`./utils/id_generator.sh $path`
   echo "el id de la tarea es: "$id
   taskPath=$path$id".task"
-  priority="$2"
-  proyect="$3"
-  deadline="$4"
-  today="$5"
   echo el path es "$taskPath"
-
   touch $taskPath
   echo "id= ""$id" >> "$taskPath"
   echo "todo= ""$todo" >> "$taskPath"
